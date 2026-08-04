@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neumorphic AI Translator & Speech Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root[data-theme="dark"] {
+            --bg-color: #1a1d24;
+            --surface-color: #1e222b;
+            --text-color: #e2e8f0;
+            --text-sub: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --shadow-out: 8px 8px 16px #13151a, -8px -8px 16px #252932;
+            --shadow-in: inset 4px 4px 8px #13151a, inset -4px -4px 8px #252932;
+            --glass-bg: rgba(30, 34, 43, 0.7);
+            --border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        :root[data-theme="light"] {
+            --bg-color: #e0e5ec;
+            --surface-color: #e0e5ec;
+            --text-color: #2d3748;
+            --text-sub: #718096;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --shadow-out: 9px 9px 16px #a3b1c6, -9px -9px 16px #ffffff;
+            --shadow-in: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+            --glass-bg: rgba(224, 229, 236, 0.7);
+            --border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 20px;
+            background: var(--surface-color);
+            box-shadow: var(--shadow-out);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .theme-toggle {
+            background: var(--surface-color);
+            border: none;
+            padding: 12px;
+            border-radius: 50%;
+            color: var(--text-color);
+            cursor: pointer;
+            box-shadow: var(--shadow-out);
+            transform-style: preserve-3d;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-3px) rotateX(10deg);
+        }
+
+        .theme-toggle:active {
+            box-shadow: var(--shadow-in);
+            transform: translateY(0);
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 868px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--surface-color);
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-out);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        select {
+            background: var(--surface-color);
+            color: var(--text-color);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 12px;
+            outline: none;
+            box-shadow: var(--shadow-out);
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        select:focus {
+            box-shadow: var(--shadow-in);
+        }
+
+        .textarea-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            background: var(--surface-color);
+            border: none;
+            border-radius: 16px;
+            padding: 1rem;
+            color: var(--text-color);
+            resize: none;
+            outline: none;
+            font-size: 1rem;
+            box-shadow: var(--shadow-in);
+            line-height: 1.5;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .char-counter {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: var(--surface-color);
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            color: var(--text-color);
+            cursor: pointer;
+            box-shadow: var(--shadow-out);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .icon-btn:active {
+            box-shadow: var(--shadow-in);
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: var(--shadow-out);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Swap Button */
+        .swap-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Glassmorphism Audio Player & History Drawer */
+        .audio-bar {
+            width: 100%;
+            max-width: 1100px;
+            margin-top: 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.25rem;
+            box-shadow: var(--shadow-out);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        audio {
+            width: 100%;
+            height: 40px;
+            outline: none;
+        }
+
+        .history-section {
+            width: 100%;
+            max-width: 1100px;
+            margin-top: 2rem;
+            background: var(--surface-color);
+            box-shadow: var(--shadow-out);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .history-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .history-item {
+            background: var(--surface-color);
+            box-shadow: var(--shadow-in);
+            padding: 0.85rem 1.25rem;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .history-text {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-width: 80%;
+        }
+
+        .history-src {
+            color: var(--text-sub);
+            font-size: 0.8rem;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: var(--surface-color);
+            color: var(--text-color);
+            box-shadow: var(--shadow-out);
+            border-left: 4px solid var(--accent);
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="brand">
+            <i class="fa-solid fa-language fa-lg"></i>
+            <span>LinguaPulse 3D</span>
+        </div>
+        <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+    </header>
+
+    <main class="app-container">
+        <!-- Input Card -->
+        <div class="card">
+            <div class="controls">
+                <select id="sourceLang">
+                    <option value="auto">Auto Detect</option>
+                    {% for code, name in languages.items() %}
+                        <option value="{{ code }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="btn-group">
+                    <button class="icon-btn" id="clearBtn" title="Clear text"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+
+            <div class="textarea-wrapper">
+                <textarea id="inputText" maxlength="5000" placeholder="Type text here to translate..."></textarea>
+            </div>
+
+            <div class="card-footer">
+                <span class="char-counter"><span id="charCount">0</span> / 5000</span>
+                <button class="btn-primary" id="translateBtn">
+                    <span id="btnText">Translate</span>
+                    <div class="spinner" id="spinner"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Output Card -->
+        <div class="card">
+            <div class="controls">
+                <select id="targetLang">
+                    {% for code, name in languages.items() %}
+                        <option value="{{ code }}" {% if code == 'es' %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="btn-group">
+                    <button class="icon-btn" id="copyBtn" title="Copy Translation"><i class="fa-solid fa-copy"></i></button>
+                    <button class="icon-btn" id="ttsBtn" title="Listen (TTS)"><i class="fa-solid fa-volume-high"></i></button>
+                    <a class="icon-btn" id="downloadBtn" style="display:none; text-decoration:none;" title="Download MP3" download="translation.mp3">
+                        <i class="fa-solid fa-download"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="textarea-wrapper">
+                <textarea id="outputText" readonly placeholder="Translation will appear here..."></textarea>
+            </div>
+
+            <div class="card-footer" style="justify-content: flex-end;">
+                <button class="icon-btn" id="swapBtn" title="Swap Languages"><i class="fa-solid fa-right-left"></i></button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Glassmorphism Audio Bar -->
+    <div class="audio-bar">
+        <i class="fa-solid fa-music fa-lg" style="color: var(--accent);"></i>
+        <audio id="audioPlayer" controls></audio>
+    </div>
+
+    <!-- History Drawer -->
+    <section class="history-section">
+        <div class="history-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Translation History</h3>
+            <button class="icon-btn" id="clearHistoryBtn" title="Clear History"><i class="fa-solid fa-broom"></i></button>
+        </div>
+        <ul class="history-list" id="historyList"></ul>
+    </section>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // DOM Elements
+        const themeToggle = document.getElementById('themeToggle');
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const sourceLang = document.getElementById('sourceLang');
+        const targetLang = document.getElementById('targetLang');
+        const translateBtn = document.getElementById('translateBtn');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('spinner');
+        const charCount = document.getElementById('charCount');
+        const copyBtn = document.getElementById('copyBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const swapBtn = document.getElementById('swapBtn');
+        const ttsBtn = document.getElementById('ttsBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const historyList = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+        // Theme Toggle Logic
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            themeToggle.querySelector('i').className = newTheme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        });
+
+        // Character Counter
+        inputText.addEventListener('input', () => {
+            charCount.textContent = inputText.value.length;
+        });
+
+        // Toast Notifications
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Translation Function
+        async function performTranslation() {
+            const text = inputText.value.trim();
+            if (!text) return;
+
+            btnText.style.display = 'none';
+            spinner.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        source: sourceLang.value,
+                        target: targetLang.value
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    outputText.value = data.translated_text;
+                    saveHistory(text, data.translated_text, sourceLang.value, targetLang.value);
+                    showToast("Translated successfully!");
+                } else {
+                    showToast(data.error || "Translation failed.");
+                }
+            } catch (err) {
+                showToast("Server network error.");
+            } finally {
+                btnText.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        }
+
+        translateBtn.addEventListener('click', performTranslation);
+
+        // Text To Speech & MP3 Generation
+        ttsBtn.addEventListener('click', async () => {
+            const text = outputText.value.trim();
+            if (!text) {
+                showToast("No text available for TTS.");
+                return;
+            }
+
+            try {
+                showToast("Generating audio...");
+                const response = await fetch('/api/tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, lang: targetLang.value })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const audioUrl = URL.createObjectURL(blob);
+                    audioPlayer.src = audioUrl;
+                    audioPlayer.play();
+
+                    downloadBtn.href = audioUrl;
+                    downloadBtn.style.display = 'flex';
+                } else {
+                    showToast("Failed to render audio.");
+                }
+            } catch (err) {
+                showToast("Error processing TTS request.");
+            }
+        });
+
+        // Copy Text
+        copyBtn.addEventListener('click', () => {
+            if (!outputText.value) return;
+            navigator.clipboard.writeText(outputText.value);
+            showToast("Copied to clipboard!");
+        });
+
+        // Clear Inputs
+        clearBtn.addEventListener('click', () => {
+            inputText.value = '';
+            outputText.value = '';
+            charCount.textContent = '0';
+            downloadBtn.style.display = 'none';
+        });
+
+        // Swap Languages
+        swapBtn.addEventListener('click', () => {
+            if (sourceLang.value === 'auto') {
+                showToast("Cannot swap Auto-Detect mode.");
+                return;
+            }
+            const temp = sourceLang.value;
+            sourceLang.value = targetLang.value;
+            targetLang.value = temp;
+
+            const tempText = inputText.value;
+            inputText.value = outputText.value;
+            outputText.value = tempText;
+        });
+
+        // History Management via LocalStorage
+        function saveHistory(srcText, transText, src, tgt) {
+            const history = JSON.parse(localStorage.getItem('trans_history') || '[]');
+            history.unshift({ srcText, transText, src, tgt, time: new Date().toLocaleTimeString() });
+            if (history.length > 20) history.pop();
+            localStorage.setItem('trans_history', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('trans_history') || '[]');
+            historyList.innerHTML = history.map(item => `
+                <li class="history-item">
+                    <div class="history-text">
+                        <strong>${item.transText}</strong>
+                        <span class="history-src">${item.srcText} (${item.src} ➔ ${item.tgt})</span>
+                    </div>
+                    <span style="font-size:0.75rem; color:var(--text-sub);">${item.time}</span>
+                </li>
+            `).join('');
+        }
+
+        clearHistoryBtn.addEventListener('click', () => {
+            localStorage.removeItem('trans_history');
+            renderHistory();
+            showToast("History cleared.");
+        });
+
+        // Initial Load
+        renderHistory();
+    </script>
+</body>
+</html>
